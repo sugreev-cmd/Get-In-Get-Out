@@ -275,7 +275,7 @@ input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
 <aside class="sidebar" id="sidebar">
   <div class="s-logo">
     <div class="s-badge">Inventory System</div>
-    <div class="s-name">Gate In / Get Out</div>
+    <div class="s-name">Gate In / Gate Out</div>
     <div class="s-sub">Warehouse & Showroom</div>
   </div>
   <nav class="nav-sec">
@@ -291,7 +291,7 @@ input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
     </div>
     <div class="nav-a" id="nav-getout" onclick="sw('getout')">
       <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-      Get Out
+      Gate Out
       <span class="nav-cnt" id="cnt-out">0</span>
     </div>
     <div class="nav-div"></div>
@@ -339,7 +339,7 @@ input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-lbl">Total</div><div class="stat-val" id="d-total">0</div><div class="stat-sub">All entries</div></div>
         <div class="stat-card"><div class="stat-lbl">Gate In</div><div class="stat-val" id="d-in" style="color:var(--blue)">0</div><div class="stat-sub">Received</div></div>
-        <div class="stat-card"><div class="stat-lbl">Get Out</div><div class="stat-val" id="d-out" style="color:var(--red)">0</div><div class="stat-sub">Dispatched</div></div>
+        <div class="stat-card"><div class="stat-lbl">Gate Out</div><div class="stat-val" id="d-out" style="color:var(--red)">0</div><div class="stat-sub">Dispatched</div></div>
         <div class="stat-card"><div class="stat-lbl">Today</div><div class="stat-val" id="d-today" style="color:var(--green)">0</div><div class="stat-sub">Today's entries</div></div>
       </div>
       <div class="card">
@@ -448,17 +448,17 @@ input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
       </div>
     </div>
 
-    <!-- GET OUT FORM -->
+    <!-- Gate Out FORM -->
     <div id="sec-getout" class="section">
       <div class="page-head">
-        <h1>Get Out</h1>
+        <h1>Gate Out</h1>
         <p>Item dispatched from Showroom</p>
       </div>
       <div class="card">
         <div class="card-head">
           <div class="card-title" style="color:var(--red)">
             <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-            Item Details — Get Out
+            Item Details — Gate Out
           </div>
         </div>
         <div class="card-body">
@@ -536,7 +536,7 @@ input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
 
           <button class="btn btn-full btn-red" onclick="submitForm('out')">
             <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            Save Get Out Entry
+            Save Gate Out Entry
           </button>
         </div>
       </div>
@@ -551,7 +551,7 @@ input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
       <div class="filter-row">
         <button class="fpill on" id="fp-all" onclick="setFilter('all')">All</button>
         <button class="fpill" id="fp-in" onclick="setFilter('in')">Gate In</button>
-        <button class="fpill" id="fp-out" onclick="setFilter('out')">Get Out</button>
+        <button class="fpill" id="fp-out" onclick="setFilter('out')">Gate Out</button>
       </div>
       <div id="entry-list"></div>
     </div>
@@ -700,7 +700,7 @@ function closeSidebar() {
 }
 
 /* NAVIGATION */
-const NAV_TITLES = { dashboard:'Dashboard', getin:'Gate In — New Entry', getout:'Get Out — New Entry', log:'All Entries', settings:'Google Sheets Setup' };
+const NAV_TITLES = { dashboard:'Dashboard', getin:'Gate In — New Entry', getout:'Gate Out — New Entry', log:'All Entries', settings:'Google Sheets Setup' };
 function sw(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('sec-' + name).classList.add('active');
@@ -802,7 +802,7 @@ async function submitForm(type) {
         method: 'POST',
         body: JSON.stringify({
           time: entry.time,
-          type: type === 'in' ? 'Gate In (Received)' : 'Get Out (Dispatched)',
+          type: type === 'in' ? 'Gate In (Received)' : 'Gate Out (Dispatched)',
           item: entry.item, sku: entry.sku, qty: entry.qty,
           cat: entry.cat, extra, dispby: entry.dispby,
           recvby: entry.recvby, filledby: entry.filledby,
@@ -815,7 +815,7 @@ async function submitForm(type) {
       toast('Entry saved locally (Sheet sync failed)', 'error');
     }
   } else {
-    toast(type === 'in' ? 'Gate In entry saved ✓' : 'Get Out entry saved ✓', 'success');
+    toast(type === 'in' ? 'Gate In entry saved ✓' : 'Gate Out entry saved ✓', 'success');
   }
 
   /* Clear form */
@@ -885,7 +885,7 @@ function entryHTML(e) {
       ${e.sku ? `<span class="entry-sku">${e.sku}</span>` : ''}
       <span class="badge ${isIn?'badge-in':'badge-out'}">
         <svg viewBox="0 0 24 24">${isIn?'<path d="M12 5v14M5 12l7 7 7-7"/>':'<path d="M12 19V5M5 12l7-7 7 7"/>'}</svg>
-        ${isIn ? 'Gate In' : 'Get Out'}
+        ${isIn ? 'Gate In' : 'Gate Out'}
       </span>
       <span class="badge badge-qty">${e.qty} pcs</span>
       <span class="entry-time">${e.time}</span>
@@ -933,7 +933,7 @@ function exportCSV() {
   const h = ['Date & Time','Type','Item Name','SKU','Quantity','Category','Condition/Dest','Dispatched By','Received By','Form Filled By','Email','Notes'];
   const rows = entries.map(e => {
     const extra = e.type==='in' ? e.cond : e.dest;
-    return [e.time, e.type==='in'?'Gate In':'Get Out', e.item, e.sku, e.qty, e.cat, extra, e.dispby, e.recvby, e.filledby, e.email, e.notes];
+    return [e.time, e.type==='in'?'Gate In':'Gate Out', e.item, e.sku, e.qty, e.cat, extra, e.dispby, e.recvby, e.filledby, e.email, e.notes];
   });
   const csv = [h,...rows].map(r => r.map(c => '"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const a = document.createElement('a');
@@ -947,7 +947,7 @@ function copyTSV() {
   const h = ['Date & Time','Type','Item Name','SKU','Quantity','Category','Condition/Dest','Dispatched By','Received By','Filled By','Email','Notes'];
   const rows = entries.map(e => {
     const extra = e.type==='in' ? e.cond : e.dest;
-    return [e.time, e.type==='in'?'Gate In':'Get Out', e.item, e.sku, e.qty, e.cat, extra, e.dispby, e.recvby, e.filledby, e.email, e.notes];
+    return [e.time, e.type==='in'?'Gate In':'Gate Out', e.item, e.sku, e.qty, e.cat, extra, e.dispby, e.recvby, e.filledby, e.email, e.notes];
   });
   navigator.clipboard.writeText([h,...rows].map(r=>r.join('\t')).join('\n'))
     .then(() => toast('Copied! Paste in Google Sheets with Ctrl+V', 'success'));
