@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get In / Get Out — Inventory Transfer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --sidebar-w: 240px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --ease: 0.18s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="dark"] {
+  --bg: #0d0d10;
+  --bg2: #111116;
+  --bg3: #17171e;
+  --bg4: #1d1d26;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0f0f4;
+  --text2: #8888a0;
+  --text3: #50506a;
+  --blue: #4f8ef7;
+  --blue-bg: rgba(79,142,247,0.11);
+  --blue-bd: rgba(79,142,247,0.28);
+  --red: #f05555;
+  --red-bg: rgba(240,85,85,0.11);
+  --red-bd: rgba(240,85,85,0.28);
+  --green: #34c785;
+  --green-bg: rgba(52,199,133,0.11);
+  --green-bd: rgba(52,199,133,0.28);
+  --amber: #f5a623;
+  --sh: 0 2px 20px rgba(0,0,0,0.55);
+}
+[data-theme="light"] {
+  --bg: #f2f1ee;
+  --bg2: #ffffff;
+  --bg3: #f8f7f5;
+  --bg4: #eeecea;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.13);
+  --text: #111116;
+  --text2: #666680;
+  --text3: #aaaac0;
+  --blue: #1a56db;
+  --blue-bg: rgba(26,86,219,0.07);
+  --blue-bd: rgba(26,86,219,0.22);
+  --red: #d92d20;
+  --red-bg: rgba(217,45,32,0.07);
+  --red-bd: rgba(217,45,32,0.22);
+  --green: #0a7a4c;
+  --green-bg: rgba(10,122,76,0.07);
+  --green-bd: rgba(10,122,76,0.22);
+  --amber: #b45309;
+  --sh: 0 2px 16px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;transition:background var(--ease),color var(--ease);overflow-x:hidden}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform var(--ease),background var(--ease);overflow-y:auto}
+.s-logo{padding:1.4rem 1.2rem 1.1rem;border-bottom:1px solid var(--border)}
+.s-badge{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);font-family:var(--font-mono);margin-bottom:5px}
+.s-name{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--text);line-height:1.2}
+.s-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.nav-sec{padding:1.1rem 0 0;flex:1}
+.nav-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 1.2rem;margin-bottom:3px;font-family:var(--font-mono)}
+.nav-a{display:flex;align-items:center;gap:9px;padding:9px 1.2rem;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;border-left:2px solid transparent;transition:all var(--ease);user-select:none}
+.nav-a:hover{color:var(--text);background:var(--bg3)}
+.nav-a.active-in{color:var(--text);background:var(--blue-bg);border-left-color:var(--blue)}
+.nav-a.active-out{color:var(--text);background:var(--red-bg);border-left-color:var(--red)}
+.nav-a.active{color:var(--text);background:var(--bg3);border-left-color:var(--text3)}
+.nav-a svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.nav-cnt{margin-left:auto;font-size:11px;font-family:var(--font-mono);background:var(--bg3);color:var(--text2);padding:1px 7px;border-radius:10px}
+.nav-div{margin:.8rem 0;border-top:1px solid var(--border)}
+.s-bottom{padding:.9rem 1.2rem;border-top:1px solid var(--border)}
+.sheet-dot{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background var(--ease)}
+.dot.on{background:var(--green);box-shadow:0 0 5px var(--green)}
+
+/* OVERLAY */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99}
+.overlay.on{display:block}
+
+/* MAIN */
+.main{flex:1;margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column;transition:margin var(--ease)}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.4rem;height:54px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--text);flex:1}
+.menu-btn{display:none;background:none;border:none;cursor:pointer;color:var(--text2);padding:6px;border-radius:var(--radius-sm)}
+.menu-btn:hover{background:var(--bg3);color:var(--text)}
+.menu-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;display:block}
+.theme-btn{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 10px;cursor:pointer;color:var(--text2);font-size:12px;font-family:var(--font-mono);font-weight:500;display:flex;align-items:center;gap:5px;transition:all var(--ease)}
+.theme-btn:hover{color:var(--text);background:var(--bg4)}
+.theme-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+/* CONTENT */
+.content{padding:1.4rem;flex:1;max-width:860px}
+.section{display:none}
+.section.active{display:block}
+.page-head{margin-bottom:1.4rem}
+.page-head h1{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text);margin-bottom:3px}
+.page-head p{font-size:13px;color:var(--text2)}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:1rem;overflow:hidden;box-shadow:var(--sh);transition:background var(--ease),border-color var(--ease)}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;border-bottom:1px solid var(--border)}
+.card-title{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px}
+.card-title svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+.card-body{padding:1.2rem}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-md);padding:.95rem 1.1rem;transition:background var(--ease)}
+.stat-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-family:var(--font-mono);margin-bottom:7px}
+.stat-val{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--text);line-height:1}
+.stat-sub{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* TYPE TOGGLE */
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border);margin-bottom:1.2rem}
+.tt-btn{padding:11px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font-display);color:var(--text2);background:var(--bg2);border:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--ease)}
+.tt-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tt-btn:hover{color:var(--text);background:var(--bg3)}
+.tt-btn.in.active{background:var(--blue-bg);color:var(--blue)}
+.tt-btn.out.active{background:var(--red-bg);color:var(--red)}
+
+/* FORM */
+.form-grid{display:grid;gap:.9rem}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g1{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--font-mono)}
+.req{color:var(--red);margin-left:2px}
+.opt{color:var(--text3);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px}
+input[type=text],input[type=number],input[type=email],textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:13px;padding:9px 12px;outline:none;transition:border-color var(--ease),background var(--ease);width:100%}
+input:focus,textarea:focus{border-color:var(--blue);background:var(--bg4)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+textarea{resize:vertical;min-height:70px}
+.field-hint{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* EMAIL valid highlight */
+input[type=email]:valid:not(:placeholder-shown){border-color:var(--green-bd)}
+
+/* DIVIDER */
+.form-divider{height:1px;background:var(--border);margin:1rem 0}
+.form-section-lbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--font-mono);margin-bottom:.8rem}
+
+/* IMAGE UPLOAD */
+.img-drop{border:1.5px dashed var(--border2);border-radius:var(--radius-md);padding:1.4rem;text-align:center;cursor:pointer;transition:all var(--ease);position:relative;background:var(--bg3)}
+.img-drop:hover,.img-drop.drag{border-color:var(--blue);background:var(--blue-bg)}
+.img-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.img-drop svg{width:26px;height:26px;stroke:var(--text3);fill:none;stroke-width:1.5;margin-bottom:7px}
+.img-drop-txt{font-size:13px;color:var(--text2);margin-bottom:2px}
+.img-drop-sub{font-size:11px;color:var(--text3)}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px;margin-top:9px}
+.thumb{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg4);border:1px solid var(--border)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,0.72);border:none;cursor:pointer;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;opacity:0;transition:opacity var(--ease)}
+.thumb:hover .thumb-del{opacity:1}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:var(--radius-sm);font-family:var(--font-display);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all var(--ease)}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.btn-full{width:100%;justify-content:center;padding:11px;margin-top:.5rem}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{opacity:.86;transform:translateY(-1px)}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{opacity:.86;transform:translateY(-1px)}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--bg4)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{opacity:.86}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;font-family:var(--font-mono);letter-spacing:.02em}
+.badge svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.2}
+.badge-in{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.badge-out{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+.badge-qty{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.badge-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+
+/* ENTRY CARDS */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.fpill{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font-body);transition:all var(--ease)}
+.fpill.on{background:var(--bg3);color:var(--text)}
+.entry-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem 1.2rem;margin-bottom:8px;animation:sIn .18s ease;transition:border-color var(--ease)}
+.entry-card:hover{border-color:var(--border2)}
+@keyframes sIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.entry-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+.entry-name{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text)}
+.entry-sku{font-family:var(--font-mono);font-size:11px;color:var(--text3)}
+.entry-time{margin-left:auto;font-size:11px;color:var(--text3);white-space:nowrap;font-family:var(--font-mono)}
+.entry-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--text2);margin-bottom:5px}
+.entry-meta span{display:flex;align-items:center;gap:4px}
+.entry-meta svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.entry-note{font-size:12px;color:var(--text2);padding:5px 9px;background:var(--bg3);border-radius:var(--radius-sm);font-style:italic;margin-top:5px}
+.entry-imgs{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.entry-img{width:52px;height:52px;border-radius:var(--radius-sm);object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:transform var(--ease)}
+.entry-img:hover{transform:scale(1.06)}
+
+/* LIGHTBOX */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:999;align-items:center;justify-content:center;padding:1.5rem}
+.lightbox.on{display:flex}
+.lightbox img{max-width:100%;max-height:90vh;border-radius:var(--radius-md);object-fit:contain}
+.lb-close{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.14);border:none;cursor:pointer;color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background var(--ease)}
+.lb-close:hover{background:rgba(255,255,255,0.25)}
+
+/* GS SETUP */
+.gs-box{background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-md);padding:1rem 1.2rem;margin-bottom:1rem}
+.gs-ttl{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--green);display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.gs-ttl svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.gs-row{display:flex;gap:7px}
+.gs-row input{flex:1}
+.gs-note{font-size:11px;color:var(--text3);margin-top:5px}
+.gs-st{font-size:12px;font-weight:500;margin-top:6px;padding:5px 9px;border-radius:var(--radius-sm);display:none}
+.gs-st.ok{background:var(--green-bg);color:var(--green)}
+.gs-st.err{background:var(--red-bg);color:var(--red)}
+.code-block{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;font-family:var(--font-mono);font-size:11.5px;color:var(--green);overflow-x:auto;white-space:pre;line-height:1.75;max-height:260px;overflow-y:auto;margin:8px 0}
+.step-row{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.step-row:last-child{border-bottom:none}
+.step-n{width:21px;height:21px;border-radius:50%;background:var(--bg4);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--blue);flex-shrink:0;font-family:var(--font-mono)}
+.step-txt{font-size:13px;color:var(--text2);line-height:1.6;flex:1}
+.step-txt strong{color:var(--text);font-weight:500}
+.step-txt code{background:var(--bg4);padding:1px 5px;border-radius:4px;font-family:var(--font-mono);font-size:11px;color:var(--amber)}
+
+/* EMPTY */
+.empty{text-align:center;padding:2.8rem 1.5rem;color:var(--text3)}
+.empty svg{width:38px;height:38px;stroke:var(--text3);fill:none;stroke-width:1.2;margin-bottom:11px;opacity:.45}
+.empty p{font-size:13px}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.4rem;right:1.4rem;z-index:998;display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 15px;font-size:13px;font-weight:500;color:var(--text);max-width:300px;box-shadow:var(--sh);opacity:0;transform:translateY(9px);animation:tin .18s ease forwards,tout .18s ease 2.7s forwards}
+.toast.success{border-color:var(--green-bd);color:var(--green)}
+.toast.error{border-color:var(--red-bd);color:var(--red)}
+@keyframes tin{to{opacity:1;transform:translateY(0)}}
+@keyframes tout{to{opacity:0;transform:translateY(-5px)}}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .menu-btn{display:flex}
+  .g2,.g3{grid-template-columns:1fr}
+  .content{padding:1rem}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .entry-time{display:none}
+  .topbar{padding:0 1rem}
+}
+@media(max-width:380px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .tt-btn span{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="s-logo">
+    <div class="s-badge">Inventory System</div>
+    <div class="s-name">Get In / Get Out</div>
+    <div class="s-sub">Warehouse & Showroom</div>
+  </div>
+  <nav class="nav-sec">
+    <div class="nav-lbl">Menu</div>
+    <div class="nav-a active" id="nav-dashboard" onclick="sw('dashboard')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-a" id="nav-getin" onclick="sw('getin')">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      Get In
+      <span class="nav-cnt" id="cnt-in">0</span>
+    </div>
+    <div class="nav-a" id="nav-getout" onclick="sw('getout')">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+      Get Out
+      <span class="nav-cnt" id="cnt-out">0</span>
+    </div>
+    <div class="nav-div"></div>
+    <div class="nav-lbl">Records</div>
+    <div class="nav-a" id="nav-log" onclick="sw('log')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      All Entries
+      <span class="nav-cnt" id="cnt-all">0</span>
+    </div>
+    <div class="nav-div"></div>
+    <div class="nav-lbl">Setup</div>
+    <div class="nav-a" id="nav-settings" onclick="sw('settings')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Google Sheets
+    </div>
+  </nav>
+  <div class="s-bottom">
+    <div class="sheet-dot">
+      <div class="dot" id="sheet-dot"></div>
+      <span id="sheet-txt">Sheet not connected</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <span id="theme-lbl">Light</span>
+    </button>
+  </header>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="sec-dashboard" class="section active">
+      <div class="page-head">
+        <h1>Dashboard</h1>
+        <p>Warehouse & Showroom transfer overview</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-lbl">Total</div><div class="stat-val" id="d-total">0</div><div class="stat-sub">All entries</div></div>
+        <div class="stat-card"><div class="stat-lbl">Get In</div><div class="stat-val" id="d-in" style="color:var(--blue)">0</div><div class="stat-sub">Received</div></div>
+        <div class="stat-card"><div class="stat-lbl">Get Out</div><div class="stat-val" id="d-out" style="color:var(--red)">0</div><div class="stat-sub">Dispatched</div></div>
+        <div class="stat-card"><div class="stat-lbl">Today</div><div class="stat-val" id="d-today" style="color:var(--green)">0</div><div class="stat-sub">Today's entries</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            Recent Entries
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="sw('getin')">+ New Entry</button>
+        </div>
+        <div id="dash-recent"></div>
+      </div>
+    </div>
+
+    <!-- GET IN FORM -->
+    <div id="sec-getin" class="section">
+      <div class="page-head">
+        <h1>Get In</h1>
+        <p>Item received from Warehouse → Showroom</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--blue)">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            Item Details — Get In
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-section-lbl">Item Information</div>
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Item Name <span class="req">*</span></label>
+              <input type="text" id="gi-item" placeholder="e.g. Sofa 3-seater">
+            </div>
+            <div class="field">
+              <label>SKU / Code <span class="opt">(optional)</span></label>
+              <input type="text" id="gi-sku" placeholder="e.g. SF-001">
+            </div>
+          </div>
+          <div class="form-grid g3" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Quantity <span class="req">*</span></label>
+              <input type="number" id="gi-qty" min="1" value="1" placeholder="1">
+            </div>
+            <div class="field">
+              <label>Category <span class="opt">(optional)</span></label>
+              <input type="text" id="gi-cat" placeholder="e.g. Furniture">
+            </div>
+            <div class="field">
+              <label>Condition <span class="opt">(optional)</span></label>
+              <input type="text" id="gi-cond" placeholder="e.g. Good, Minor Damage">
+            </div>
+          </div>
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Vehicle / Transport <span class="opt">(optional)</span></label>
+              <input type="text" id="gi-vehicle" placeholder="e.g. DL01AB1234">
+            </div>
+            <div class="field">
+              <label>Notes <span class="opt">(optional)</span></label>
+              <input type="text" id="gi-notes" placeholder="Any remarks...">
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+          <div class="form-section-lbl">People Details</div>
+
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Dispatched By <span class="req">*</span></label>
+              <input type="text" id="gi-dispby" placeholder="Name of person who sent item">
+            </div>
+            <div class="field">
+              <label>Received By <span class="req">*</span></label>
+              <input type="text" id="gi-recvby" placeholder="Name of person who received item">
+            </div>
+          </div>
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Form Filled By <span class="req">*</span></label>
+              <input type="text" id="gi-filledby" placeholder="Your full name">
+            </div>
+            <div class="field">
+              <label>Email Address <span class="req">*</span></label>
+              <input type="email" id="gi-email" placeholder="your@email.com">
+              <div class="field-hint">Email of the person filling this form</div>
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+          <div class="form-section-lbl">Images <span class="opt" style="font-size:11px">(optional — max 5)</span></div>
+
+          <div class="img-drop" id="gi-drop" ondragover="onDrag(event,'gi-drop',true)" ondragleave="onDrag(event,'gi-drop',false)" ondrop="onDrop(event,'gi')">
+            <input type="file" accept="image/*" multiple onchange="onPick(event,'gi')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div class="img-drop-txt">Click or drag images here</div>
+            <div class="img-drop-sub">JPG, PNG, WEBP</div>
+          </div>
+          <div class="preview-grid" id="gi-previews"></div>
+
+          <button class="btn btn-full btn-blue" onclick="submitForm('in')">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Get In Entry
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GET OUT FORM -->
+    <div id="sec-getout" class="section">
+      <div class="page-head">
+        <h1>Get Out</h1>
+        <p>Item dispatched from Showroom</p>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--red)">
+            <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            Item Details — Get Out
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="form-section-lbl">Item Information</div>
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Item Name <span class="req">*</span></label>
+              <input type="text" id="go-item" placeholder="e.g. King size bed">
+            </div>
+            <div class="field">
+              <label>SKU / Code <span class="opt">(optional)</span></label>
+              <input type="text" id="go-sku" placeholder="e.g. BD-001">
+            </div>
+          </div>
+          <div class="form-grid g3" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Quantity <span class="req">*</span></label>
+              <input type="number" id="go-qty" min="1" value="1" placeholder="1">
+            </div>
+            <div class="field">
+              <label>Category <span class="opt">(optional)</span></label>
+              <input type="text" id="go-cat" placeholder="e.g. Furniture">
+            </div>
+            <div class="field">
+              <label>Dispatched To <span class="req">*</span></label>
+              <input type="text" id="go-dest" placeholder="e.g. Customer, Repair, Return">
+            </div>
+          </div>
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Customer Name / Reason <span class="opt">(optional)</span></label>
+              <input type="text" id="go-customer" placeholder="e.g. Ramesh Kumar or Repair work">
+            </div>
+            <div class="field">
+              <label>Notes <span class="opt">(optional)</span></label>
+              <input type="text" id="go-notes" placeholder="Any remarks...">
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+          <div class="form-section-lbl">People Details</div>
+
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Dispatched By <span class="req">*</span></label>
+              <input type="text" id="go-dispby" placeholder="Name of person who sent item">
+            </div>
+            <div class="field">
+              <label>Received By <span class="req">*</span></label>
+              <input type="text" id="go-recvby" placeholder="Name of person who received item">
+            </div>
+          </div>
+          <div class="form-grid g2" style="margin-bottom:.9rem">
+            <div class="field">
+              <label>Form Filled By <span class="req">*</span></label>
+              <input type="text" id="go-filledby" placeholder="Your full name">
+            </div>
+            <div class="field">
+              <label>Email Address <span class="req">*</span></label>
+              <input type="email" id="go-email" placeholder="your@email.com">
+              <div class="field-hint">Email of the person filling this form</div>
+            </div>
+          </div>
+
+          <div class="form-divider"></div>
+          <div class="form-section-lbl">Images <span class="opt" style="font-size:11px">(optional — max 5)</span></div>
+
+          <div class="img-drop" id="go-drop" ondragover="onDrag(event,'go-drop',true)" ondragleave="onDrag(event,'go-drop',false)" ondrop="onDrop(event,'go')">
+            <input type="file" accept="image/*" multiple onchange="onPick(event,'go')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div class="img-drop-txt">Click or drag images here</div>
+            <div class="img-drop-sub">JPG, PNG, WEBP</div>
+          </div>
+          <div class="preview-grid" id="go-previews"></div>
+
+          <button class="btn btn-full btn-red" onclick="submitForm('out')">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Get Out Entry
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div id="sec-log" class="section">
+      <div class="page-head">
+        <h1>All Entries</h1>
+        <p>Complete transfer history</p>
+      </div>
+      <div class="filter-row">
+        <button class="fpill on" id="fp-all" onclick="setFilter('all')">All</button>
+        <button class="fpill" id="fp-in" onclick="setFilter('in')">Get In</button>
+        <button class="fpill" id="fp-out" onclick="setFilter('out')">Get Out</button>
+      </div>
+      <div id="entry-list"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="sec-settings" class="section">
+      <div class="page-head">
+        <h1>Google Sheets Setup</h1>
+        <p>Auto-save all entries to your Google Sheet</p>
+      </div>
+      <div class="gs-box">
+        <div class="gs-ttl">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Connect Google Sheet
+        </div>
+        <div class="gs-row">
+          <input type="text" id="gs-url" placeholder="Paste Apps Script Web App URL here...">
+          <button class="btn btn-green" onclick="saveGS()">Connect</button>
+        </div>
+        <div class="gs-note">Deploy the Apps Script below, then paste the Web App URL above.</div>
+        <div class="gs-st" id="gs-st"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Setup Guide — One Time Only
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="step-row"><div class="step-n">1</div><div class="step-txt"><strong>Create Google Sheet</strong> — Go to <a href="https://sheets.google.com" target="_blank" style="color:var(--blue)">sheets.google.com</a>, create a new spreadsheet, name it "Inventory Transfers"</div></div>
+          <div class="step-row"><div class="step-n">2</div><div class="step-txt"><strong>Open Apps Script</strong> — In your sheet click <code>Extensions → Apps Script</code></div></div>
+          <div class="step-row"><div class="step-n">3</div><div class="step-txt"><strong>Paste the code below</strong> — Delete existing code first, then paste this:</div></div>
+          <div class="code-block" id="script-code">function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Transfers');
+  if (!sheet) {
+    sheet = ss.insertSheet('Transfers');
+    var headers = [
+      'Date & Time','Type','Item Name','SKU','Quantity',
+      'Category','Condition / Dest','Dispatched By',
+      'Received By','Form Filled By','Email','Notes','Images'
+    ];
+    sheet.appendRow(headers);
+    var hdr = sheet.getRange(1, 1, 1, headers.length);
+    hdr.setFontWeight('bold');
+    hdr.setBackground('#1a73e8');
+    hdr.setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+  }
+  var d = JSON.parse(e.postData.contents);
+  sheet.appendRow([
+    d.time, d.type, d.item, d.sku, d.qty,
+    d.cat, d.extra, d.dispby,
+    d.recvby, d.filledby, d.email, d.notes,
+    d.images || ''
+  ]);
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</div>
+          <button class="btn btn-ghost" style="margin-bottom:.8rem" onclick="copyCode()">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Code
+          </button>
+          <div class="step-row"><div class="step-n">4</div><div class="step-txt"><strong>Deploy as Web App</strong> — Click <code>Deploy → New deployment → Web app</code><br>Set <code>Execute as: Me</code> &nbsp;|&nbsp; <code>Who has access: Anyone</code> → Deploy → Copy the URL</div></div>
+          <div class="step-row"><div class="step-n">5</div><div class="step-txt"><strong>Paste URL above</strong> and click Connect — done! Every entry will auto-save to your sheet.</div></div>
+          <div class="step-row"><div class="step-n">6</div><div class="step-txt"><strong>GitHub Pages</strong> — Upload this HTML file as <code>index.html</code> in your repo. Enable <code>Settings → Pages → Deploy from branch (main)</code>. Your app goes live at <code>yourusername.github.io/repo-name</code></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Manual Export
+          </div>
+        </div>
+        <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" onclick="exportCSV()">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download CSV
+          </button>
+          <button class="btn btn-ghost" onclick="copyTSV()">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy for Sheets
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLB()">
+  <button class="lb-close" onclick="closeLB()">✕</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* STATE */
+let entries = [];
+let filterVal = 'all';
+let scriptUrl = localStorage.getItem('gs_url') || '';
+let isConnected = false;
+let imgs = { gi: [], go: [] };
+
+/* THEME */
+const savedTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+applyThemeBtn(savedTheme);
+
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const nxt = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', nxt);
+  localStorage.setItem('theme', nxt);
+  applyThemeBtn(nxt);
+}
+function applyThemeBtn(t) {
+  document.getElementById('theme-lbl').textContent = t === 'dark' ? 'Light' : 'Dark';
+  const ic = document.getElementById('theme-icon');
+  ic.innerHTML = t === 'dark'
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+}
+
+/* SIDEBAR */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('on');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('on');
+}
+
+/* NAVIGATION */
+const NAV_TITLES = { dashboard:'Dashboard', getin:'Get In — New Entry', getout:'Get Out — New Entry', log:'All Entries', settings:'Google Sheets Setup' };
+function sw(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.querySelectorAll('.nav-a').forEach(el => el.className = el.className.replace(/active(-in|-out)?/g,'').trim());
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) {
+    navEl.classList.add(name==='getin' ? 'active-in' : name==='getout' ? 'active-out' : 'active');
+  }
+  document.getElementById('topbar-title').textContent = NAV_TITLES[name] || '';
+  closeSidebar();
+  if (name === 'dashboard') renderDash();
+  if (name === 'log') renderLog();
+}
+
+/* UTILS */
+function g(id) { return (document.getElementById(id)?.value || '').trim(); }
+function clr(ids) { ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); }
+function nowStr() {
+  const d = new Date();
+  return d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+    d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+}
+function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function updateCounts() {
+  const inC = entries.filter(e=>e.type==='in').length;
+  const outC = entries.filter(e=>e.type==='out').length;
+  document.getElementById('cnt-in').textContent = inC;
+  document.getElementById('cnt-out').textContent = outC;
+  document.getElementById('cnt-all').textContent = entries.length;
+}
+
+/* IMAGE UPLOAD */
+function onDrag(e, id, on) { e.preventDefault(); document.getElementById(id).classList.toggle('drag', on); }
+function onDrop(e, prefix) { e.preventDefault(); document.getElementById(prefix+'-drop').classList.remove('drag'); handleFiles(Array.from(e.dataTransfer.files), prefix); }
+function onPick(e, prefix) { handleFiles(Array.from(e.target.files), prefix); }
+function handleFiles(files, prefix) {
+  const remaining = 5 - imgs[prefix].length;
+  files.slice(0, remaining).forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = ev => { imgs[prefix].push(ev.target.result); renderPreviews(prefix); };
+    r.readAsDataURL(file);
+  });
+}
+function renderPreviews(prefix) {
+  const grid = document.getElementById(prefix + '-previews');
+  grid.innerHTML = imgs[prefix].map((src, i) => `
+    <div class="thumb">
+      <img src="${src}" alt="Preview">
+      <button class="thumb-del" onclick="removeImg('${prefix}',${i})" aria-label="Remove">✕</button>
+    </div>`).join('');
+}
+function removeImg(prefix, i) { imgs[prefix].splice(i, 1); renderPreviews(prefix); }
+
+/* SUBMIT */
+async function submitForm(type) {
+  const p = type === 'in' ? 'gi' : 'go';
+  const item     = g(p+'-item');
+  const qty      = parseInt(document.getElementById(p+'-qty').value) || 0;
+  const dispby   = g(p+'-dispby');
+  const recvby   = g(p+'-recvby');
+  const filledby = g(p+'-filledby');
+  const email    = g(p+'-email');
+  const dest     = type === 'out' ? g('go-dest') : '';
+
+  if (!item)     { toast('Item Name is required', 'error'); return; }
+  if (qty < 1)   { toast('Enter a valid Quantity', 'error'); return; }
+  if (type==='out' && !dest) { toast('Dispatched To is required', 'error'); return; }
+  if (!dispby)   { toast('Dispatched By is required', 'error'); return; }
+  if (!recvby)   { toast('Received By is required', 'error'); return; }
+  if (!filledby) { toast('Form Filled By is required', 'error'); return; }
+  if (!email)    { toast('Email Address is required', 'error'); return; }
+  if (!isValidEmail(email)) { toast('Enter a valid email address', 'error'); return; }
+
+  const entry = {
+    id: 'TXN-' + Date.now(),
+    type,
+    item, sku: g(p+'-sku'), qty,
+    cat: g(p+'-cat') || '—',
+    cond: type === 'in' ? (g('gi-cond') || '—') : '—',
+    dest: type === 'out' ? dest : '—',
+    customer: type === 'out' ? (g('go-customer') || '—') : '—',
+    vehicle: type === 'in' ? (g('gi-vehicle') || '—') : '—',
+    dispby, recvby, filledby, email,
+    notes: g(p+'-notes'),
+    images: [...imgs[p]],
+    time: nowStr(), ts: Date.now()
+  };
+  entries.unshift(entry);
+  updateCounts();
+
+  /* Push to Google Sheet */
+  if (scriptUrl && isConnected) {
+    try {
+      const extra = type === 'in'
+        ? 'Vehicle: ' + entry.vehicle + ' | Condition: ' + entry.cond
+        : 'To: ' + entry.dest + ' | Customer: ' + entry.customer;
+      await fetch(scriptUrl, {
+        method: 'POST',
+        body: JSON.stringify({
+          time: entry.time,
+          type: type === 'in' ? 'Get In (Received)' : 'Get Out (Dispatched)',
+          item: entry.item, sku: entry.sku, qty: entry.qty,
+          cat: entry.cat, extra, dispby: entry.dispby,
+          recvby: entry.recvby, filledby: entry.filledby,
+          email: entry.email, notes: entry.notes,
+          images: entry.images.length ? entry.images.length + ' image(s)' : 'None'
+        })
+      });
+      toast('Entry saved & synced to Google Sheet ✓', 'success');
+    } catch {
+      toast('Entry saved locally (Sheet sync failed)', 'error');
+    }
+  } else {
+    toast(type === 'in' ? 'Get In entry saved ✓' : 'Get Out entry saved ✓', 'success');
+  }
+
+  /* Clear form */
+  const fieldsToClear = type === 'in'
+    ? ['gi-item','gi-sku','gi-cat','gi-cond','gi-vehicle','gi-notes','gi-dispby','gi-recvby','gi-filledby','gi-email']
+    : ['go-item','go-sku','go-cat','go-dest','go-customer','go-notes','go-dispby','go-recvby','go-filledby','go-email'];
+  clr(fieldsToClear);
+  document.getElementById(p+'-qty').value = 1;
+  imgs[p] = [];
+  renderPreviews(p);
+  renderDash();
+}
+
+/* DASHBOARD */
+function renderDash() {
+  const today = new Date().toDateString();
+  const todayC = entries.filter(e => new Date(e.ts).toDateString() === today).length;
+  document.getElementById('d-total').textContent = entries.length;
+  document.getElementById('d-in').textContent = entries.filter(e=>e.type==='in').length;
+  document.getElementById('d-out').textContent = entries.filter(e=>e.type==='out').length;
+  document.getElementById('d-today').textContent = todayC;
+  const el = document.getElementById('dash-recent');
+  const recent = entries.slice(0, 5);
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg><p>No entries yet — <a href="#" onclick="sw('getin');return false" style="color:var(--blue)">create your first Get In entry</a></p></div>`;
+    return;
+  }
+  el.innerHTML = recent.map(e => entryHTML(e)).join('');
+}
+
+/* LOG */
+function setFilter(f) {
+  filterVal = f;
+  ['all','in','out'].forEach(x => document.getElementById('fp-'+x).className = 'fpill' + (f===x?' on':''));
+  renderLog();
+}
+function renderLog() {
+  const list = filterVal==='all' ? entries : entries.filter(e=>e.type===filterVal);
+  const el = document.getElementById('entry-list');
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><p>No entries found</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(e => entryHTML(e)).join('');
+}
+
+function entryHTML(e) {
+  const isIn = e.type === 'in';
+  const metaItems = [
+    e.cat!=='—' ? `<span><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>${e.cat}</span>` : '',
+    isIn && e.vehicle!=='—' ? `<span><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>${e.vehicle}</span>` : '',
+    isIn && e.cond!=='—' ? `<span><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${e.cond}</span>` : '',
+    !isIn && e.dest!=='—' ? `<span><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${e.dest}</span>` : '',
+    !isIn && e.customer!=='—' ? `<span><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${e.customer}</span>` : '',
+    `<span><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Dispatched: ${e.dispby}</span>`,
+    `<span><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Received: ${e.recvby}</span>`,
+    `<span><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${e.email}</span>`
+  ].filter(Boolean).join('');
+
+  const imgs = e.images?.length
+    ? `<div class="entry-imgs">${e.images.map(src=>`<img class="entry-img" src="${src}" onclick="openLB('${src}')" alt="Item">`).join('')}</div>`
+    : '';
+
+  return `<div class="entry-card">
+    <div class="entry-top">
+      <span class="entry-name">${e.item}</span>
+      ${e.sku ? `<span class="entry-sku">${e.sku}</span>` : ''}
+      <span class="badge ${isIn?'badge-in':'badge-out'}">
+        <svg viewBox="0 0 24 24">${isIn?'<path d="M12 5v14M5 12l7 7 7-7"/>':'<path d="M12 19V5M5 12l7-7 7 7"/>'}</svg>
+        ${isIn ? 'Get In' : 'Get Out'}
+      </span>
+      <span class="badge badge-qty">${e.qty} pcs</span>
+      <span class="entry-time">${e.time}</span>
+    </div>
+    <div class="entry-meta">${metaItems}</div>
+    ${e.notes ? `<div class="entry-note">${e.notes}</div>` : ''}
+    ${imgs}
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;font-family:var(--font-mono)">Filled by: ${e.filledby}</div>
+  </div>`;
+}
+
+/* LIGHTBOX */
+function openLB(src) { document.getElementById('lb-img').src = src; document.getElementById('lightbox').classList.add('on'); }
+function closeLB() { document.getElementById('lightbox').classList.remove('on'); }
+
+/* GOOGLE SHEETS */
+function saveGS() {
+  const url = document.getElementById('gs-url').value.trim();
+  const st = document.getElementById('gs-st');
+  if (!url || !url.includes('script.google.com')) {
+    st.className = 'gs-st err'; st.style.display = 'block';
+    st.textContent = 'Please enter a valid Apps Script Web App URL.'; return;
+  }
+  scriptUrl = url;
+  localStorage.setItem('gs_url', url);
+  isConnected = true;
+  updateSheetUI();
+  st.className = 'gs-st ok'; st.style.display = 'block';
+  st.textContent = '✓ Connected! All new entries will sync to your Google Sheet automatically.';
+  toast('Google Sheets connected!', 'success');
+}
+function updateSheetUI() {
+  const dot = document.getElementById('sheet-dot');
+  const txt = document.getElementById('sheet-txt');
+  dot.classList.toggle('on', isConnected);
+  txt.textContent = isConnected ? 'Sheet connected' : 'Sheet not connected';
+  txt.style.color = isConnected ? 'var(--green)' : '';
+}
+function copyCode() {
+  navigator.clipboard.writeText(document.getElementById('script-code').textContent)
+    .then(() => toast('Code copied!', 'success'));
+}
+function exportCSV() {
+  if (!entries.length) { toast('No entries to export', 'error'); return; }
+  const h = ['Date & Time','Type','Item Name','SKU','Quantity','Category','Condition/Dest','Dispatched By','Received By','Form Filled By','Email','Notes'];
+  const rows = entries.map(e => {
+    const extra = e.type==='in' ? e.cond : e.dest;
+    return [e.time, e.type==='in'?'Get In':'Get Out', e.item, e.sku, e.qty, e.cat, extra, e.dispby, e.recvby, e.filledby, e.email, e.notes];
+  });
+  const csv = [h,...rows].map(r => r.map(c => '"'+String(c||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'inventory_transfers_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('CSV downloaded!', 'success');
+}
+function copyTSV() {
+  if (!entries.length) { toast('No entries to copy', 'error'); return; }
+  const h = ['Date & Time','Type','Item Name','SKU','Quantity','Category','Condition/Dest','Dispatched By','Received By','Filled By','Email','Notes'];
+  const rows = entries.map(e => {
+    const extra = e.type==='in' ? e.cond : e.dest;
+    return [e.time, e.type==='in'?'Get In':'Get Out', e.item, e.sku, e.qty, e.cat, extra, e.dispby, e.recvby, e.filledby, e.email, e.notes];
+  });
+  navigator.clipboard.writeText([h,...rows].map(r=>r.join('\t')).join('\n'))
+    .then(() => toast('Copied! Paste in Google Sheets with Ctrl+V', 'success'));
+}
+
+/* TOAST */
+function toast(msg, type='') {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3100);
+}
+
+/* INIT */
+if (scriptUrl) {
+  isConnected = true;
+  document.getElementById('gs-url').value = scriptUrl;
+  updateSheetUI();
+}
+renderDash();
+</script>
+</body>
+</html>
