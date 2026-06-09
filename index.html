@@ -969,7 +969,44 @@ if (scriptUrl) {
   document.getElementById('gs-url').value = scriptUrl;
   updateSheetUI();
 }
-renderDash();
+ async function loadSheetData() {
+  if (!scriptUrl) return;
+
+  try {
+    const res = await fetch(scriptUrl);
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length < 2) return;
+
+    entries = [];
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+
+      entries.push({
+        type: row[1]?.toString().includes('Gate In') ? 'in' : 'out',
+        item: row[2] || '',
+        sku: row[3] || '',
+        qty: row[4] || '',
+        cat: row[5] || '',
+        dispby: row[7] || '',
+        recvby: row[8] || '',
+        filledby: row[9] || '',
+        email: row[10] || '',
+        notes: row[11] || '',
+        time: row[0] || '',
+        ts: Date.now()
+      });
+    }
+
+    updateCounts();
+    renderDash();
+    renderLog();
+
+  } catch (err) {
+    console.log(err);
+  }
+} renderDash();
 </script>
 </body>
 </html>
