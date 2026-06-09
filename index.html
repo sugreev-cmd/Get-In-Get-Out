@@ -853,15 +853,54 @@ function setFilter(f) {
   renderLog();
 }
 function renderLog() {
-  const list = filterVal==='all' ? entries : entries.filter(e=>e.type===filterVal);
+  const list = filterVal === 'all'
+    ? entries
+    : entries.filter(e => e.type === filterVal);
+
   const el = document.getElementById('entry-list');
+
   if (!list.length) {
-    el.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><p>No entries found</p></div>`;
+    el.innerHTML = '<div class="empty"><p>No entries found</p></div>';
     return;
   }
-  el.innerHTML = list.map(e => entryHTML(e)).join('');
-}
 
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;background:var(--bg2)">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Item Name</th>
+            <th>SKU</th>
+            <th>Qty</th>
+            <th>Category</th>
+            <th>Dispatched By</th>
+            <th>Received By</th>
+            <th>Filled By</th>
+            <th>Email</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(e => `
+            <tr>
+              <td>${e.type === 'in' ? 'Gate In' : 'Gate Out'}</td>
+              <td>${e.item || ''}</td>
+              <td>${e.sku || ''}</td>
+              <td>${e.qty || ''}</td>
+              <td>${e.cat || ''}</td>
+              <td>${e.dispby || ''}</td>
+              <td>${e.recvby || ''}</td>
+              <td>${e.filledby || ''}</td>
+              <td>${e.email || ''}</td>
+              <td>${e.notes || ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
 function entryHTML(e) {
   const isIn = e.type === 'in';
   const metaItems = [
