@@ -923,41 +923,46 @@ function renderLog() {
   }
 
   el.innerHTML = `
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;background:var(--bg2)">
-        <thead>
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Type</th>
+          <th>Item Name</th>
+          <th>SKU</th>
+          <th>Qty</th>
+          <th>Category</th>
+          <th>Condition / Dest</th>
+          <th>Dispatched By</th>
+          <th>Received By</th>
+          <th>Filled By</th>
+          <th>Email</th>
+          <th>Notes</th>
+          <th>Images</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${list.map(e => `
           <tr>
-            <th>Type</th>
-            <th>Item Name</th>
-            <th>SKU</th>
-            <th>Qty</th>
-            <th>Category</th>
-            <th>Dispatched By</th>
-            <th>Received By</th>
-            <th>Filled By</th>
-            <th>Email</th>
-            <th>Notes</th>
+            <td>${e.time || ''}</td>
+            <td>${e.type === 'in' ? 'Gate In' : 'Gate Out'}</td>
+            <td>${e.item || ''}</td>
+            <td>${e.sku || ''}</td>
+            <td>${e.qty || ''}</td>
+            <td>${e.cat || ''}</td>
+            <td>${e.extra || ''}</td>
+            <td>${e.dispby || ''}</td>
+            <td>${e.recvby || ''}</td>
+            <td>${e.filledby || ''}</td>
+            <td>${e.email || ''}</td>
+            <td>${e.notes || ''}</td>
+            <td>${e.images || ''}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${list.map(e => `
-            <tr>
-              <td>${e.type === 'in' ? 'Gate In' : 'Gate Out'}</td>
-              <td>${e.item || ''}</td>
-              <td>${e.sku || ''}</td>
-              <td>${e.qty || ''}</td>
-              <td>${e.cat || ''}</td>
-              <td>${e.dispby || ''}</td>
-              <td>${e.recvby || ''}</td>
-              <td>${e.filledby || ''}</td>
-              <td>${e.email || ''}</td>
-              <td>${e.notes || ''}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
+        `).join('')}
+      </tbody>
+    </table>
+  </div>`;
 }
 function entryHTML(e) {
   const isIn = e.type === 'in';
