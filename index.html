@@ -821,7 +821,7 @@ async function submitForm(type) {
           cat: entry.cat, extra, dispby: entry.dispby,
           recvby: entry.recvby, filledby: entry.filledby,
           email: entry.email, notes: entry.notes,
-          images: entry.images.length ? entry.images.length + ' image(s)' : 'None'
+         images: entry.images
         })
       });
       toast('Entry saved & synced to Google Sheet ✓', 'success');
